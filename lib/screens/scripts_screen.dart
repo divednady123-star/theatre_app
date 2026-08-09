@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/auth_service.dart';
 import '../core/services/data_service.dart';
@@ -20,10 +23,12 @@ class ScriptsScreen extends StatelessWidget {
       builder: (context) {
         return DraggableScrollableSheet(
           expand: false,
-          initialChildSize: 0.85,
+          initialChildSize: 0.9,
           minChildSize: 0.5,
           maxChildSize: 0.95,
           builder: (context, scrollController) {
+            final isLocalFile = script.fileUrl.isNotEmpty && File(script.fileUrl).existsSync();
+
             return Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
@@ -64,7 +69,7 @@ class ScriptsScreen extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              'القسم: ${script.sceneName} • الصفحة 1 من ${script.pageCount}',
+                              'القسم: ${script.sceneName} • ${script.pageCount} صفحة',
                               style: const TextStyle(fontSize: 12, color: AppConstants.textMuted),
                             ),
                           ],
@@ -78,40 +83,31 @@ class ScriptsScreen extends StatelessWidget {
                   ),
                   const Divider(height: 24),
                   Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppConstants.bgOffWhite,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppConstants.softGoldPrimary.withOpacity(0.3)),
-                      ),
-                      child: ListView(
-                        controller: scrollController,
-                        children: [
-                          SelectableText(
-                            script.contentText.isNotEmpty
-                                ? script.contentText
-                                : 'محتوى اسكربت النص المسرحي المعتمد من لجنة المسرح الكنسي لعام 2026.\n\nيمكن للممثل مراجعة حوارات الشخصية والأوقات التعبيرية المرفقة بكتيب النص.',
-                            style: const TextStyle(fontSize: 16, height: 1.8, color: AppConstants.textDark),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('جارٍ فتح ملف PDF الخارجي: ${script.fileUrl}'),
-                          backgroundColor: AppConstants.royalBluePrimary,
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.picture_as_pdf),
-                    label: const Text('تحميل أو فتح ملف PDF الكامل'),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: isLocalFile
+                          ? SfPdfViewer.file(File(script.fileUrl))
+                          : (script.contentText.isNotEmpty
+                              ? Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: AppConstants.bgOffWhite,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: AppConstants.softGoldPrimary.withOpacity(0.3)),
+                                  ),
+                                  child: ListView(
+                                    controller: scrollController,
+                                    children: [
+                                      SelectableText(
+                                        script.contentText,
+                                        style: const TextStyle(fontSize: 16, height: 1.8, color: AppConstants.textDark),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : const Center(
+                                  child: Text('عفواً، ملف الـ PDF غير متوفر محللياً على هذا الجهاز.'),
+                                )),
                     ),
                   ),
                 ],
@@ -129,83 +125,120 @@ class ScriptsScreen extends StatelessWidget {
     final descController = TextEditingController();
     final contentController = TextEditingController();
     final pageController = TextEditingController(text: '10');
+    
+    PlatformFile? pickedPdfFile;
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Row(
-            children: const [
-              Icon(Icons.note_add, color: AppConstants.softGoldPrimary),
-              SizedBox(width: 8),
-              Text('إضافة إسكريبت جديد (للمشرف)'),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(labelText: 'عنوان الإسكريبت / النص'),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Row(
+                children: const [
+                  Icon(Icons.note_add, color: AppConstants.softGoldPrimary),
+                  SizedBox(width: 8),
+                  Text('إضافة إسكريبت جديد (لالمشرف)'),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: titleController,
+                      decoration: const InputDecoration(labelText: 'عنوان الإسكريبت / النص'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: sceneController,
+                      decoration: const InputDecoration(labelText: 'اسم المشهد (مثال: المشهد الثالث)'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: descController,
+                      decoration: const InputDecoration(labelText: 'وصف مختصر'),
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    // زر اختيار ملف PDF
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        FilePickerResult? result = await FilePicker.platform.pickFiles(
+                          type: FileType.custom,
+                          allowedExtensions: ['pdf'],
+                        );
+                        if (result != null && result.files.isNotEmpty) {
+                          setState(() {
+                            pickedPdfFile = result.files.first;
+                          });
+                        }
+                      },
+                      icon: const Icon(Icons.picture_as_pdf, color: Colors.redAccent),
+                      label: Text(
+                        pickedPdfFile == null
+                            ? 'اختيار ملف PDF من الموبايل'
+                            : 'تم اختيار: ${pickedPdfFile!.name}',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 45),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    TextField(
+                      controller: contentController,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        labelText: 'ملاحظات أو ملخص النص (اختياري)',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: pageController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'عدد الصفحات (تقديري)'),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: sceneController,
-                  decoration: const InputDecoration(labelText: 'اسم المشهد (مثال: المشهد الثالث)'),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('إلغاء'),
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: descController,
-                  decoration: const InputDecoration(labelText: 'وصف مختصر'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: contentController,
-                  maxLines: 4,
-                  decoration: const InputDecoration(labelText: 'نص الإسكريبت أول الملف'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: pageController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'عدد الصفحات (تقديري)'),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (titleController.text.trim().isEmpty) return;
+
+                    final filePath = pickedPdfFile?.path ?? '';
+
+                    final newScript = ScriptItem(
+                      id: const Uuid().v4(),
+                      title: titleController.text.trim(),
+                      sceneName: sceneController.text.trim().isEmpty ? 'عام' : sceneController.text.trim(),
+                      description: descController.text.trim(),
+                      contentText: contentController.text.trim(),
+                      fileUrl: filePath,
+                      pageCount: int.tryParse(pageController.text) ?? 10,
+                      addedDate: DateTime.now().toString().split(' ')[0],
+                      author: 'المشرف',
+                    );
+
+                    await Provider.of<DataService>(context, listen: false).addScript(newScript);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('تمت إضافة الإسكريبت بملف الـ PDF بنجاح!')),
+                      );
+                    }
+                  },
+                  child: const Text('حفظ وإضافة'),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('إلغاء'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (titleController.text.trim().isEmpty) return;
-
-                final newScript = ScriptItem(
-                  id: const Uuid().v4(),
-                  title: titleController.text.trim(),
-                  sceneName: sceneController.text.trim().isEmpty ? 'عام' : sceneController.text.trim(),
-                  description: descController.text.trim(),
-                  contentText: contentController.text.trim(),
-                  fileUrl: 'assets/scripts/new_script.pdf',
-                  pageCount: int.tryParse(pageController.text) ?? 5,
-                  addedDate: DateTime.now().toString().split(' ')[0],
-                  author: 'المشرف',
-                );
-
-                await Provider.of<DataService>(context, listen: false).addScript(newScript);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('تمت إضافة الإسكريبت بنجاح!')),
-                  );
-                }
-              },
-              child: const Text('حفظ وإضافة'),
-            ),
-          ],
+            );
+          },
         );
       },
     );

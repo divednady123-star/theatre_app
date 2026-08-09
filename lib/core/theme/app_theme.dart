@@ -53,7 +53,7 @@ class AppTheme {
         ),
         iconTheme: const IconThemeData(color: AppConstants.softGoldPrimary),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppConstants.cardSurface,
         elevation: 3,
         shadowColor: AppConstants.royalBlueDark.withOpacity(0.08),

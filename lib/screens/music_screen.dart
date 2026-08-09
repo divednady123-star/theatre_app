@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:file_picker/file_picker.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/auth_service.dart';
 import '../core/services/data_service.dart';
@@ -15,6 +16,7 @@ class MusicScreen extends StatelessWidget {
     final durationController = TextEditingController(text: '03:30');
     final composerController = TextEditingController(text: 'المشرف الموسيقي');
     String category = 'موسيقى تصويرية';
+    PlatformFile? pickedAudioFile;
 
     showDialog(
       context: context,
@@ -26,7 +28,7 @@ class MusicScreen extends StatelessWidget {
                 children: const [
                   Icon(Icons.library_music, color: AppConstants.softGoldPrimary),
                   SizedBox(width: 8),
-                  Text('إضافة ملف صوتي جديد (للمشرف)'),
+                  Text('إضافة ملف صوتی جديد (للمشرف)'),
                 ],
               ),
               content: SingleChildScrollView(
@@ -51,6 +53,32 @@ class MusicScreen extends StatelessWidget {
                       },
                     ),
                     const SizedBox(height: 12),
+                    
+                    // زر اختيار ملف الصوت من الهاتف
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        FilePickerResult? result = await FilePicker.platform.pickFiles(
+                          type: FileType.audio,
+                        );
+                        if (result != null && result.files.isNotEmpty) {
+                          setDialogState(() {
+                            pickedAudioFile = result.files.first;
+                          });
+                        }
+                      },
+                      icon: const Icon(Icons.audiotrack, color: AppConstants.royalBluePrimary),
+                      label: Text(
+                        pickedAudioFile == null
+                            ? 'اختيار ملف صوتی من الهاتف'
+                            : 'تم اختيار: ${pickedAudioFile!.name}',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 45),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
                     TextField(
                       controller: durationController,
                       decoration: const InputDecoration(labelText: 'مدة التراك (مثال: 03:45)'),
@@ -72,12 +100,14 @@ class MusicScreen extends StatelessWidget {
                   onPressed: () async {
                     if (titleController.text.trim().isEmpty) return;
 
+                    final filePath = pickedAudioFile?.path ?? 'assets/audio/new_track.mp3';
+
                     final newTrack = MusicTrack(
                       id: const Uuid().v4(),
                       title: titleController.text.trim(),
                       category: category,
                       duration: durationController.text.trim(),
-                      audioUrl: 'assets/audio/new_track.mp3',
+                      audioUrl: filePath,
                       composer: composerController.text.trim(),
                     );
 

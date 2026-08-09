@@ -17,7 +17,7 @@ dependencies:
   intl: any
   uuid: ^4.3.3
   file_picker: ^6.1.1
-  syncfusion_flutter_pdfviewer: ^24.2.7
+  syncfusion_flutter_pdfviewer: ^28.2.3
   audioplayers: ^6.0.0
 
 dev_dependencies:

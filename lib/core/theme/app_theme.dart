@@ -91,7 +91,7 @@ class AppTheme {
         thickness: 1,
         space: 24,
       ),
-      dialogTheme: DialogTheme(
+     dialogTheme: DialogThemeData(
         backgroundColor: AppConstants.bgPureWhite,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),

@@ -16,10 +16,12 @@ dependencies:
   google_fonts: ^6.1.0
   intl: any
   uuid: ^4.3.3
-
+file_picker: ^8.0.0
+syncfusion_flutter_pdfviewer: ^24.2.7
+audioplayers: ^6.0.0
 dev_dependencies:
   flutter_test:
-    sdk: flutter
+ sdk: flutter
   flutter_lints: ^3.0.0
 
 flutter:

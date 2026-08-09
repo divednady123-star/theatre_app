@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/auth_service.dart';
 import '../core/services/data_service.dart';
@@ -29,6 +32,56 @@ class _RolesScheduleScreenState extends State<RolesScheduleScreen> {
     }
   }
 
+  void _openPdfViewer(BuildContext context, String filePath, String title) {
+    if (filePath.isEmpty || !File(filePath).existsSync()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('عفواً، لا يوجد ملف PDF مرفق أو الملف غير متوفر محلياً.')),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppConstants.bgPureWhite,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SizedBox(
+          height: MediaQuery.of(context).size.height * 0.85,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppConstants.royalBlueDark),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const Divider(),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: SfPdfViewer.file(File(filePath)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _showAddOrEditRoleDialog(BuildContext context, {RoleScheduleItem? itemToEdit}) {
     final sceneController = TextEditingController(text: itemToEdit?.sceneName ?? '');
     final charController = TextEditingController(text: itemToEdit?.characterName ?? '');
@@ -37,6 +90,7 @@ class _RolesScheduleScreenState extends State<RolesScheduleScreen> {
     final locationController = TextEditingController(text: itemToEdit?.location ?? 'قاعة المسرح الكبير');
     final notesController = TextEditingController(text: itemToEdit?.notes ?? '');
     String status = itemToEdit?.status ?? 'قيد البروزة';
+    PlatformFile? pickedPdfFile;
 
     showDialog(
       context: context,
@@ -93,6 +147,33 @@ class _RolesScheduleScreenState extends State<RolesScheduleScreen> {
                       },
                     ),
                     const SizedBox(height: 10),
+                    
+                    // زرار مرفق PDF للتقسيمة
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        FilePickerResult? result = await FilePicker.platform.pickFiles(
+                          type: FileType.custom,
+                          allowedExtensions: ['pdf'],
+                        );
+                        if (result != null && result.files.isNotEmpty) {
+                          setDialogState(() {
+                            pickedPdfFile = result.files.first;
+                          });
+                        }
+                      },
+                      icon: const Icon(Icons.picture_as_pdf, color: Colors.redAccent),
+                      label: Text(
+                        pickedPdfFile == null
+                            ? 'إرفاق ملف PDF للتقسيمة (اختياري)'
+                            : 'تم اختيار: ${pickedPdfFile!.name}',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 42),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
                     TextField(
                       controller: notesController,
                       decoration: const InputDecoration(labelText: 'ملاحظات وتوجيهات الإخراج'),
@@ -176,7 +257,7 @@ class _RolesScheduleScreenState extends State<RolesScheduleScreen> {
                 color: AppConstants.bgOffWhite,
                 child: Row(
                   children: [
-                    const Text('تصفية حسب الحالة: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text('تصفية: ', style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: SingleChildScrollView(

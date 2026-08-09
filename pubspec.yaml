@@ -16,7 +16,7 @@ dependencies:
   google_fonts: ^6.1.0
   intl: any
   uuid: ^4.3.3
-  file_picker: ^6.1.1
+  file_picker: ^8.0.0
   syncfusion_flutter_pdfviewer: ^28.2.3
   audioplayers: ^6.0.0
 

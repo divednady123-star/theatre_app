@@ -19,12 +19,17 @@ class AdminLoginDialog extends StatefulWidget {
 
 class _AdminLoginDialogState extends State<AdminLoginDialog> {
   final _passwordController = TextEditingController();
+  final _oldPasswordController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+
   String? _errorMessage;
   bool _isLoading = false;
 
   @override
   void dispose() {
     _passwordController.dispose();
+    _oldPasswordController.dispose();
+    _newPasswordController.dispose();
     super.dispose();
   }
 
@@ -60,6 +65,82 @@ class _AdminLoginDialogState extends State<AdminLoginDialog> {
     }
   }
 
+  void _showChangePasswordDialog(BuildContext context) {
+    _oldPasswordController.clear();
+    _newPasswordController.clear();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('تغيير كلمة السر'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _oldPasswordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'كلمة السر القديمة',
+                prefixIcon: Icon(Icons.lock_outline),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _newPasswordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'كلمة السر الجديدة',
+                prefixIcon: Icon(Icons.key),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final oldPass = _oldPasswordController.text.trim();
+              final newPass = _newPasswordController.text.trim();
+
+              if (oldPass.isEmpty || newPass.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('يرجى ملء جميع الحقول')),
+                );
+                return;
+              }
+
+              final authService = Provider.of<AuthService>(context, listen: false);
+              final success = await authService.changeAdminPassword(oldPass, newPass);
+
+              if (context.mounted) {
+                Navigator.pop(dialogContext);
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('تم تغيير كلمة السر بنجاح!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('كلمة السر القديمة غير صحيحة'),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('حفظ التغيير'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
@@ -78,11 +159,13 @@ class _AdminLoginDialogState extends State<AdminLoginDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: const [
             Text('أنت حالياً تتصفح التطبيق بصلاحيات المشرف (Admin Mode). يمكنك الإضافة والتعديل في كافة الأقسام.'),
-            SizedBox(height: 12),
-            Text('رمز الدخول الافتراضي: admin', style: TextStyle(fontWeight: FontWeight.bold, color: AppConstants.royalBluePrimary)),
           ],
         ),
         actions: [
+          TextButton(
+            onPressed: () => _showChangePasswordDialog(context),
+            child: const Text('تغيير كلمة السر', style: TextStyle(color: AppConstants.royalBluePrimary)),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('إغلاق'),
@@ -98,7 +181,7 @@ class _AdminLoginDialogState extends State<AdminLoginDialog> {
                 );
               }
             },
-            child: const Text('تسجيل الخروج من المشرف'),
+            child: const Text('تسجيل الخروج'),
           ),
         ],
       );
@@ -132,11 +215,6 @@ class _AdminLoginDialogState extends State<AdminLoginDialog> {
                 errorText: _errorMessage,
               ),
               onSubmitted: (_) => _handleLogin(),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'ملاحظة: كلمة السر الافتراضية للتجربة هي "admin"',
-              style: TextStyle(fontSize: 12, color: AppConstants.textMuted, fontStyle: FontStyle.italic),
             ),
           ],
         ),

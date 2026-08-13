@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "728526168590",
+    "project_id": "church-theatre-app",
+    "storage_bucket": "church-theatre-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:728526168590:android:7ba975f5645783970f125f",
+        "android_client_info": {
+          "package_name": "com.example.church_theatre_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3obRb2ZR3VGMQUxD9ieIvA725g_z_37w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

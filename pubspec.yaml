@@ -19,7 +19,7 @@ dependencies:
   uuid: ^4.3.3
 
   # عرض ملفات السكريبت والتقسيمة PDF
-  syncfusion_flutter_pdfviewer: ^24.2.7
+  syncfusion_flutter_pdfviewer: ^28.2.3
   file_picker: ^8.0.0
 
   # تشغيل الموسيقى والصوتيات

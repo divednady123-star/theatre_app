@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:church_theatre_app/models/script_item.dart';
 
 // موديل مخصص لعناصر الموسيقى والفيديوهات
 class MediaItem {
@@ -31,42 +32,17 @@ class MediaItem {
       );
 }
 
-// موديل مخصص لعناصر السكريبت
-class ScriptModel {
-  final String id;
-  final String title;
-  final String content;
-
-  ScriptModel({
-    required this.id,
-    required this.title,
-    required this.content,
-  });
-
-  factory ScriptModel.fromJson(Map<String, dynamic> json) => ScriptModel(
-        id: json['id'] ?? '',
-        title: json['title'] ?? '',
-        content: json['content'] ?? '',
-      );
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'content': content,
-      };
-}
-
 class DataService extends ChangeNotifier {
   String? _mainScriptPdfPath;
   String? _schedulePdfPath;
   List<MediaItem> _mediaList = [];
-  List<ScriptModel> _scripts = [];
+  List<ScriptItem> _scripts = [];
 
   // Getters
   String? get mainScriptPdfPath => _mainScriptPdfPath;
   String? get schedulePdfPath => _schedulePdfPath;
   List<MediaItem> get mediaList => _mediaList;
-  List<ScriptModel> get scripts => _scripts;
+  List<ScriptItem> get scripts => _scripts;
 
   DataService() {
     _loadData();
@@ -87,7 +63,7 @@ class DataService extends ChangeNotifier {
     final String? scriptsJson = prefs.getString('scripts_list');
     if (scriptsJson != null) {
       final List<dynamic> decoded = jsonDecode(scriptsJson);
-      _scripts = decoded.map((item) => ScriptModel.fromJson(item)).toList();
+      _scripts = decoded.map((item) => ScriptItem.fromJson(item)).toList();
     }
 
     notifyListeners();
@@ -130,19 +106,9 @@ class DataService extends ChangeNotifier {
     await prefs.setString('media_list', encoded);
   }
 
-  // 4. إدارة السكريبتات النصية
-  Future<void> addScript(dynamic script) async {
-    if (script is ScriptModel) {
-      _scripts.add(script);
-    } else if (script is Map<String, dynamic>) {
-      _scripts.add(ScriptModel.fromJson(script));
-    } else {
-      _scripts.add(ScriptModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: script.toString(),
-        content: '',
-      ));
-    }
+  // 4. إدارة السكريبتات النصية بالـ ScriptItem الأصلي
+  Future<void> addScript(ScriptItem script) async {
+    _scripts.add(script);
     await _saveScriptsList();
     notifyListeners();
   }

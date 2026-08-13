@@ -37,12 +37,16 @@ class DataService extends ChangeNotifier {
   String? _schedulePdfPath;
   List<MediaItem> _mediaList = [];
   List<ScriptItem> _scripts = [];
+  List<String> _roles = [];
+  List<String> _tracks = [];
 
   // Getters
   String? get mainScriptPdfPath => _mainScriptPdfPath;
   String? get schedulePdfPath => _schedulePdfPath;
   List<MediaItem> get mediaList => _mediaList;
   List<ScriptItem> get scripts => _scripts;
+  List<String> get roles => _roles;
+  List<String> get tracks => _tracks;
 
   DataService() {
     _loadData();
@@ -65,6 +69,9 @@ class DataService extends ChangeNotifier {
       final List<dynamic> decoded = jsonDecode(scriptsJson);
       _scripts = decoded.map((item) => ScriptItem.fromJson(item)).toList();
     }
+
+    _roles = prefs.getStringList('roles_list') ?? [];
+    _tracks = prefs.getStringList('tracks_list') ?? [];
 
     notifyListeners();
   }
@@ -99,14 +106,13 @@ class DataService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // حفظ قائمة الميديا
   Future<void> _saveMediaList() async {
     final prefs = await SharedPreferences.getInstance();
     final String encoded = jsonEncode(_mediaList.map((item) => item.toJson()).toList());
     await prefs.setString('media_list', encoded);
   }
 
-  // 4. إدارة السكريبتات النصية بالـ ScriptItem الأصلي
+  // 4. إدارة السكريبتات النصية
   Future<void> addScript(ScriptItem script) async {
     _scripts.add(script);
     await _saveScriptsList();
@@ -123,5 +129,20 @@ class DataService extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final String encoded = jsonEncode(_scripts.map((item) => item.toJson()).toList());
     await prefs.setString('scripts_list', encoded);
+  }
+
+  // 5. إدارة الأدوار والتراكات (مطلوبة لشاشة live_theatre_2026_screen)
+  Future<void> addRole(String role) async {
+    _roles.add(role);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('roles_list', _roles);
+    notifyListeners();
+  }
+
+  Future<void> addTrack(String track) async {
+    _tracks.add(track);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('tracks_list', _tracks);
+    notifyListeners();
   }
 }

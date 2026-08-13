@@ -31,15 +31,42 @@ class MediaItem {
       );
 }
 
+// موديل مخصص لعناصر السكريبت
+class ScriptModel {
+  final String id;
+  final String title;
+  final String content;
+
+  ScriptModel({
+    required this.id,
+    required this.title,
+    required this.content,
+  });
+
+  factory ScriptModel.fromJson(Map<String, dynamic> json) => ScriptModel(
+        id: json['id'] ?? '',
+        title: json['title'] ?? '',
+        content: json['content'] ?? '',
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'content': content,
+      };
+}
+
 class DataService extends ChangeNotifier {
   String? _mainScriptPdfPath;
   String? _schedulePdfPath;
   List<MediaItem> _mediaList = [];
+  List<ScriptModel> _scripts = [];
 
   // Getters
   String? get mainScriptPdfPath => _mainScriptPdfPath;
   String? get schedulePdfPath => _schedulePdfPath;
   List<MediaItem> get mediaList => _mediaList;
+  List<ScriptModel> get scripts => _scripts;
 
   DataService() {
     _loadData();
@@ -56,6 +83,13 @@ class DataService extends ChangeNotifier {
       final List<dynamic> decoded = jsonDecode(mediaJson);
       _mediaList = decoded.map((item) => MediaItem.fromJson(item)).toList();
     }
+
+    final String? scriptsJson = prefs.getString('scripts_list');
+    if (scriptsJson != null) {
+      final List<dynamic> decoded = jsonDecode(scriptsJson);
+      _scripts = decoded.map((item) => ScriptModel.fromJson(item)).toList();
+    }
+
     notifyListeners();
   }
 
@@ -94,5 +128,34 @@ class DataService extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final String encoded = jsonEncode(_mediaList.map((item) => item.toJson()).toList());
     await prefs.setString('media_list', encoded);
+  }
+
+  // 4. إدارة السكريبتات النصية
+  Future<void> addScript(dynamic script) async {
+    if (script is ScriptModel) {
+      _scripts.add(script);
+    } else if (script is Map<String, dynamic>) {
+      _scripts.add(ScriptModel.fromJson(script));
+    } else {
+      _scripts.add(ScriptModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        title: script.toString(),
+        content: '',
+      ));
+    }
+    await _saveScriptsList();
+    notifyListeners();
+  }
+
+  Future<void> deleteScript(String id) async {
+    _scripts.removeWhere((item) => item.id == id);
+    await _saveScriptsList();
+    notifyListeners();
+  }
+
+  Future<void> _saveScriptsList() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String encoded = jsonEncode(_scripts.map((item) => item.toJson()).toList());
+    await prefs.setString('scripts_list', encoded);
   }
 }

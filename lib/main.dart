@@ -43,11 +43,11 @@ class ChurchTheatreApp extends StatelessWidget {
         Locale('ar', 'EG'),
         Locale('ar'),
       ],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+     localizationsDelegates: [
+  GlobalMaterialLocalizations.delegate,
+  GlobalWidgetsLocalizations.delegate,
+  GlobalCupertinoLocalizations.delegate,
+],
       builder: (context, child) {
         return Directionality(
           textDirection: TextDirection.rtl,

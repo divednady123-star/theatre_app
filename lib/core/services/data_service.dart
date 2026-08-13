@@ -131,7 +131,7 @@ class DataService extends ChangeNotifier {
     await prefs.setString('scripts_list', encoded);
   }
 
-  // 5. إدارة الأدوار والتراكات (مطلوبة لشاشة live_theatre_2026_screen)
+  // 5. إدارة الأدوار والتراكات
   Future<void> addRole(String role) async {
     _roles.add(role);
     final prefs = await SharedPreferences.getInstance();

@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace "com.churchtheatre.app"
+    namespace "com.example.church_theatre_app"
     compileSdk 36
-ndkVersion = "28.2.13676358"
+
     defaultConfig {
-        applicationId "com.churchtheatre.app"
+        applicationId "com.example.church_theatre_app"
         minSdk 21
         targetSdk 36
         versionCode 1

@@ -1,6 +1,7 @@
 name: church_theatre_app
-description: "تطبيق كامل وفخم لإدارة أعمال فريق المسرح الكنسي - مسرح حي 2026"
+description: "تطبيق فريق المسرح الكنسي - خيمة مسرح حي"
 publish_to: 'none'
+
 version: 1.0.0+1
 
 environment:
@@ -9,22 +10,38 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_localizations:
-    sdk: flutter
+
+  # إدارة الحالة والبيانات Local
   provider: ^6.1.1
   shared_preferences: ^2.2.2
-  google_fonts: ^6.1.0
-  intl: any
   uuid: ^4.3.3
+
+  # عرض ملفات السكريبت والتقسيمة PDF
+  syncfusion_flutter_pdfviewer: ^24.2.7
   file_picker: ^8.0.0
-  syncfusion_flutter_pdfviewer: ^28.2.3
-  audioplayers: ^6.0.0
+
+  # تشغيل الموسيقى والصوتيات
+  audioplayers: ^5.2.1
+
+  # الأيقونات والتصميم
+  cupertino_icons: ^1.0.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  flutter_launcher_icons: "^0.13.1"
+
+# إعدادات توليد آيقونة التطبيق الجديدة
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "icon.png"
+  min_sdk_android: 21
+
 flutter:
   uses-material-design: true
- # assets:
-  #  - assets/
+
+  # تعريف المجلدات والصور
+  assets:
+    - icon.png

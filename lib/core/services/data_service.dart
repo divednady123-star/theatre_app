@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:church_theatre_app/models/script_item.dart';
 
-// موديل مخصص لعناصر الموسيقى والفيديوهات
 class MediaItem {
   final String id;
   final String title;
   final String path;
-  final String type; // 'audio' (MP3) أو 'video' (MP4)
+  final String type;
 
   MediaItem({
     required this.id,
@@ -40,7 +39,6 @@ class DataService extends ChangeNotifier {
   List<String> _roles = [];
   List<String> _tracks = [];
 
-  // Getters
   String? get mainScriptPdfPath => _mainScriptPdfPath;
   String? get schedulePdfPath => _schedulePdfPath;
   List<MediaItem> get mediaList => _mediaList;
@@ -49,10 +47,14 @@ class DataService extends ChangeNotifier {
   List<String> get tracks => _tracks;
 
   DataService() {
-    _loadData();
+    init();
   }
 
-  // تحميل البيانات المحفوظة محلياً عند فتح التطبيق
+  // الميثود التي ينادي عليها main.dart
+  Future<void> init() async {
+    await _loadData();
+  }
+
   Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
     _mainScriptPdfPath = prefs.getString('main_script_pdf_path');
@@ -76,7 +78,6 @@ class DataService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // 1. حفظ وتحديث PDF السكريبت
   Future<void> setMainScriptPdf(String path) async {
     _mainScriptPdfPath = path;
     final prefs = await SharedPreferences.getInstance();
@@ -84,7 +85,6 @@ class DataService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // 2. حفظ وتحديث PDF التقسيمة
   Future<void> setSchedulePdf(String path) async {
     _schedulePdfPath = path;
     final prefs = await SharedPreferences.getInstance();
@@ -92,14 +92,12 @@ class DataService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // 3. إضافة ملف موسيقى أو فيديو جديد
   Future<void> addMediaItem(MediaItem item) async {
     _mediaList.add(item);
     await _saveMediaList();
     notifyListeners();
   }
 
-  // حذف ملف ميديا
   Future<void> removeMediaItem(String id) async {
     _mediaList.removeWhere((item) => item.id == id);
     await _saveMediaList();
@@ -112,7 +110,6 @@ class DataService extends ChangeNotifier {
     await prefs.setString('media_list', encoded);
   }
 
-  // 4. إدارة السكريبتات النصية
   Future<void> addScript(ScriptItem script) async {
     _scripts.add(script);
     await _saveScriptsList();
@@ -131,7 +128,6 @@ class DataService extends ChangeNotifier {
     await prefs.setString('scripts_list', encoded);
   }
 
-  // 5. إدارة الأدوار والتراكات
   Future<void> addRole(String role) async {
     _roles.add(role);
     final prefs = await SharedPreferences.getInstance();
